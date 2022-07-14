@@ -5,25 +5,20 @@ from pytube import YouTube
 
 
 def args_parsing():
-    url = ''
     download_dir = ''
 
     # TODO: Implement parsing arguments
     parser = argparse.ArgumentParser(description='Choosing video or audio to download')
-    parser.add_argument('--url', metavar='-u', default=False, action='store', type=str, help='Specify video URL')
+    parser.add_argument('--url', '-u', required=True, default=False, action='store', type=str,
+                        help='Specify video URL')
     parser.add_argument('--audio', default=False, action='store_true', help='Download audio only')
     args = parser.parse_args()
-
-    if not args.url:
-        url = args.url
-        print(url)
-    else:
-        raise argparse.ArgumentTypeError('URL has not been specified')
+    print(type(args))
 
     if os.path.isdir(sys.argv[-1]):
-        pass
+        download_dir = sys.argv[-1]
     if args.audio:
-        download_audio(url, download_dir)
+        download_audio(args.url, download_dir)
         print('download audio')
     if not args.audio:
         download_video(url, download_dir)
@@ -52,8 +47,8 @@ def show_info(yt: YouTube.streams):
     :param yt: YT video instance
     """
     # TODO: Implement method
-    filesize = ''
-    print(f'[INFO] Downloading file "{yt.title}", with size of {filesize}')
+    file_size = ''
+    print(f'[INFO] Downloading file "{yt.title}", with size of {file_size}')
 
 
 if __name__ == "__main__":
