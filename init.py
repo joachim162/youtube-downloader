@@ -24,8 +24,10 @@ def check_parsing(args=args_parsing()) -> Downloader:
     :param args: Command line arguments
     :return: New Downloader instance with parameters from arguments
     """
+    # TODO: Verify download folder
     downloader = Downloader(url=args.url)
-    if os.path.isdir(sys.argv[-1]):
+    download_path = str(sys.argv[-1])  # last argument
+    if os.path.exists(download_path):
         downloader = Downloader(url=args.url, download_path=sys.argv[-1])
     if args.resolution is not None:
         downloader = Downloader(url=args.url, download_path=sys.argv[-1], resolution=args.resolution)
