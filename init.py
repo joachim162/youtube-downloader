@@ -30,7 +30,10 @@ def args_parsing() -> Namespace:
                         dest='audio')
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
                         help='Specify video resolution (1080p)', dest='resolution')
-    parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False, dest='directory')
+    parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
+                        dest='directory')
+    parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
+                        dest='output')
     args = parser.parse_args()
     return args
 
@@ -39,21 +42,23 @@ def check_parsing(args=args_parsing()) -> Downloader:
     """
     Check parsing and set parameters to Downloader
 
-    :param args: Command line arguments
+    :param args: Parsed command line arguments
     :return: New Downloader instance with parameters from arguments
     """
-    downloader = Downloader(url=args.url)
     download_path = os.getcwd()
+    resolution = None
     if is_dir(args.directory):
         download_path = args.directory
     if args.resolution is not None:
-        downloader = Downloader(url=args.url, download_path=download_path, resolution=args.resolution)
+        resolution = args.resolution
 
-    downloader = Downloader(url=args.url, download_path=download_path, resolution=args.resolution,
-                            video_only=args.video,
-                            audio_only=args.audio)
-    return downloader
+    return Downloader(url=args.url,
+                      download_path=download_path,
+                      resolution=resolution,
+                      video_only=args.video,
+                      audio_only=args.audio)
 
 
 if __name__ == "__main__":
-    check_parsing()
+    downloader = check_parsing()  # Downloader instance with video information
+    downloader.download()  # Starting downloading

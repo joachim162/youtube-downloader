@@ -43,7 +43,6 @@ class Downloader:
         self.title = self.yt.title
         self.video_title = ''
         self.audio_title = ''
-        self.download()
 
     def download(self) -> None:
         """
@@ -84,7 +83,7 @@ class Downloader:
         file = file.get_audio_only()
         file = self.yt.streams.get_by_itag(file.itag)
         self.format_title(audio=True)
-        # show_info(file, filename)
+        self.show_info(file.filesize, audio=True)
         file.download(output_path=self.download_path, filename=self.audio_title)
 
     def download_file(self) -> None:
@@ -100,17 +99,31 @@ class Downloader:
                 self.download_audio()
                 video_path = f'{self.download_path}/{self.video_title}'
                 audio_path = f'{self.download_path}/{self.audio_title}'
+                print(f'[INFO] Merging video and audio files...')
                 concat(video_path, audio_path, self.video_title, self.download_path)
+                print(f'[INFO] Removing temporary files...')
                 self.rm_tmp_files()
         else:
             file = self.yt.streams.get_highest_resolution()
+            self.show_info(file.filesize, video=True)
             file.download(output_path=self.download_path)
 
-    """
-    def show_info(self):
-        file_size: int = round(self.yt.filesize / 1024 ** 2, 2)  # File size in MB
-        print(f'[INFO] Downloading "{yt.title}", with size of {file_size} MB, in {filename[-3:]} format')
-    """
+    def show_info(self, file_size: float, video: bool = False, audio: bool = False) -> None:
+        """
+        Print info about download
+
+        :param file_size: File size in bytes
+        :param video: True if video
+        :param audio:True if audio
+        :return: None
+        """
+        file_size: int = round(file_size / 1024 ** 2, 2)  # Formatting file size to MB and rounding to 2 places
+        if video:
+            print(f'[INFO] Downloading video "{self.video_title}", '
+                  f'with size of {file_size} in MB, to {self.download_path}')
+        elif audio:
+            print(f'[INFO] Downloading audio "{self.audio_title}", '
+                  f'with size of {file_size} in MB, to {self.download_path}')
 
     def check_resolution(self) -> StreamQuery:
         """
@@ -137,8 +150,7 @@ class Downloader:
         resolutions: list = []
         for res in self.yt.streams.filter(only_video=True):
             resolutions.append(res.resolution)
-        resolutions = list(dict.fromkeys(resolutions))  # Removing duplicates
-        return resolutions
+        return list(dict.fromkeys(resolutions))  # Removing duplicates
 
     def format_title(self, video: bool = False, audio: bool = False) -> None:
         """
@@ -161,11 +173,9 @@ class Downloader:
                 title = title[:-3]  # Removing .mp4 from audio file
                 title += '.mp3'
                 self.audio_title = title
-                print(f'audio title: {self.audio_title}')
             elif '.mp3' not in title:
                 title += '.mp3'
                 self.audio_title = title
-                print(f'audio title: {self.audio_title}')
 
     def rm_tmp_files(self) -> None:
         """
