@@ -12,7 +12,7 @@ def is_dir(path: str) -> bool:
     :param path: path to check
     :return: True if directory exists, False if otherwise
     """
-    return pathlib.Path(path).absolute().is_dir()
+    return pathlib.Path(str(path)).absolute().is_dir()
 
 
 def args_parsing() -> Namespace:
@@ -31,7 +31,7 @@ def args_parsing() -> Namespace:
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
                         help='Specify video resolution (1080p)', dest='resolution')
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
-                        dest='directory')
+                        dest='directory', type=str)
     parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
                         dest='output')
     args = parser.parse_args()
