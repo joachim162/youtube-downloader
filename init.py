@@ -32,8 +32,8 @@ def args_parsing() -> Namespace:
                         help='Specify video resolution (1080p)', dest='resolution')
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str)
-    parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
-                        dest='output')
+    parser.add_argument('--name', '-n', help='Output filename', required=False, action='store', type=str,
+                        dest='name', default=None)
     args = parser.parse_args()
     return args
 
@@ -56,9 +56,12 @@ def check_parsing(args=args_parsing()) -> Downloader:
                       download_path=download_path,
                       resolution=resolution,
                       video_only=args.video,
-                      audio_only=args.audio)
+                      audio_only=args.audio,
+                      filename=args.name)
 
 
 if __name__ == "__main__":
     downloader = check_parsing()  # Downloader instance with video information
     downloader.download()  # Starting downloading
+    if downloader.filename is not None:
+        downloader.rename_file()

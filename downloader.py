@@ -23,7 +23,7 @@ class Downloader:
     Class represents a downloader
     """
     def __init__(self, url: str, download_path: str = '.', resolution: str = None, video_only: bool = False,
-                 audio_only: bool = False):
+                 audio_only: bool = False, filename: str = None):
         """
         Initialize Downloader class
 
@@ -32,12 +32,14 @@ class Downloader:
         :param resolution: Video resolution
         :param video_only: If true, only video will be downloaded
         :param audio_only: If true, only audio will be downloaded
+        :param filename: Output filename
         """
         self.url = url
         self.download_path = download_path
         self.resolution = resolution
         self.video_only = video_only
         self.audio_only = audio_only
+        self.filename = filename
 
         self.yt = YouTube(self.url)
         self.title = self.yt.title
@@ -93,7 +95,7 @@ class Downloader:
         :return: None
         """
         if self.resolution is not None:
-            resolution: int = int(self.resolution[:-1])  # Removing 'p' from variable (1080p -> 1080p)
+            resolution: int = int(self.resolution[:-1])  # Removing 'p' from variable (1080p -> 1080p) for comparing
             if resolution > 720:
                 self.download_video()
                 self.download_audio()
@@ -185,3 +187,19 @@ class Downloader:
         """
         os.remove(f'{self.download_path}/{self.video_title}')
         os.remove(f'{self.download_path}/{self.audio_title}')
+
+    def rename_file(self) -> None:
+        """
+        Rename output file if specified in command line arguments
+
+        :return: None
+        """
+        new: str = os.path.join(self.download_path, self.filename)
+
+        if (self.video_only is False and self.audio_only is False) or self.video_only:
+            old: str = os.path.join(self.download_path, self.video_title)
+            os.rename(old, new)
+        else:
+            old: str = os.path.join(self.download_path, self.audio_title)
+            os.rename(old, new)
+
