@@ -22,8 +22,10 @@ def args_parsing() -> Namespace:
     :return: Namespace instance for further processing
     """
     parser = argparse.ArgumentParser(description='Choosing video or audio to download')
-    parser.add_argument('--url', '-u', required=True, default=False, action='store', type=str,
+    parser.add_argument('--url', '-u', required=False, default=False, action='store', type=str,
                         help='Specify video URL', dest='url')
+    parser.add_argument('--file', '-f', required=False, default=False, action='store', type=str,
+                        help='Specify file path with multiple URLs', dest='file')
     parser.add_argument('--video', default=False, required=False, action='store_true', help='Download audio only',
                         dest='video')
     parser.add_argument('--audio', default=False, required=False, action='store_true', help='Download audio only',
