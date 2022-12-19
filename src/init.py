@@ -15,6 +15,30 @@ def is_dir(path: str) -> bool:
     return pathlib.Path(str(path)).absolute().is_dir()
 
 
+def is_file(path: str) -> bool:
+    """
+    Check if file from argument exists
+
+    :param path: file path to check
+    :return: True if file exists, False if otherwise
+    """
+    return pathlib.Path(str(path)).absolute().is_file()
+
+
+def read_file(path) -> list:
+    """
+    Read file with URLs and return them in list
+
+    :param path: file path with URLs
+    :return: list filled with URLs
+    """
+    urls: list = []  # New list
+    with open(path, 'r') as reader:
+        for line in reader.read().splitlines():
+            urls.append(line)
+    return urls
+
+
 def args_parsing() -> Namespace:
     """
     Parsing command line arguments
@@ -53,13 +77,21 @@ def check_parsing(args=args_parsing()) -> Downloader:
         download_path = args.directory
     if args.resolution is not None:
         resolution = args.resolution
-
-    return Downloader(url=args.url,
-                      download_path=download_path,
-                      resolution=resolution,
-                      video_only=args.video,
-                      audio_only=args.audio,
-                      filename=args.name)
+    if args.file is not None and is_file(args.file):
+        url = read_file(args.file)
+        return Downloader(url=url,
+                          download_path=download_path,
+                          resolution=resolution,
+                          video_only=args.video,
+                          audio_only=args.audio,
+                          filename=args.name)
+    else:
+        return Downloader(url=args.url,
+                          download_path=download_path,
+                          resolution=resolution,
+                          video_only=args.video,
+                          audio_only=args.audio,
+                          filename=args.name)
 
 
 if __name__ == "__main__":

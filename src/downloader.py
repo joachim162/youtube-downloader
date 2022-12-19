@@ -22,12 +22,12 @@ class Downloader:
     """
     Class represents a downloader
     """
-    def __init__(self, url: str, download_path: str = '.', resolution: str = None, video_only: bool = False,
+    def __init__(self, url, download_path: str = '.', resolution: str = None, video_only: bool = False,
                  audio_only: bool = False, filename: str = None):
         """
         Initialize Downloader class
 
-        :param url: Video URL
+        :param url: Video URL, or a list of URLs
         :param download_path: Download path
         :param resolution: Video resolution
         :param video_only: If true, only video will be downloaded
@@ -40,7 +40,6 @@ class Downloader:
         self.video_only = video_only
         self.audio_only = audio_only
         self.filename = filename
-
         self.yt = YouTube(self.url)
         self.title = self.yt.title
         self.video_title = ''
@@ -52,6 +51,7 @@ class Downloader:
 
         :return: None
         """
+        # TODO: Implement function for bulk download
         if self.video_only is False and self.audio_only is False:
             self.download_file()
         elif self.video_only:
