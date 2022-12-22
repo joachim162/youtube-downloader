@@ -40,7 +40,17 @@ class Downloader:
         self.video_only = video_only
         self.audio_only = audio_only
         self.filename = filename
-        self.yt = YouTube(self.url)
+        self.bulk_download: bool = False
+
+        # If self.url is a list, it is filled with instances of YouTube class
+        # If not, there will be a single YouTube instance
+        if type(self.url) is list:
+            self.bulk_download = True
+            self.yt = []  # List of YouTube instances
+            for url in self.url:
+                self.yt.append(YouTube(url))
+        else:
+            self.yt = YouTube(self.url)
         self.title = self.yt.title
         self.video_title = ''
         self.audio_title = ''
@@ -52,20 +62,29 @@ class Downloader:
         :return: None
         """
         # TODO: Implement function for bulk download
-        if self.video_only is False and self.audio_only is False:
-            self.download_file()
-        elif self.video_only:
-            self.download_video()
-        else:
-            self.download_audio()
+        if self.bulk_download:
+            for yt in self.yt:
+                if self.video_only is False and self.audio_only is False:
+                    self.download_file(yt)
+                elif self.video_only:
+                    self.download_video(yt)
+                else:
+                    self.download_audio(yt)
 
-    def download_video(self) -> None:
+        if self.video_only is False and self.audio_only is False:
+            self.download_file(self.yt)
+        elif self.video_only:
+            self.download_video(self.yt)
+        else:
+            self.download_audio(self.yt)
+
+    def download_video(self, yt: YouTube = None) -> None:
         """
         Download video only
 
         :return: None
         """
-        file = self.yt.streams.filter(only_video=True)
+        file = yt.streams.filter(only_video=True)
         if self.resolution is not None:
             file = self.check_resolution().first()
         else:
@@ -75,20 +94,20 @@ class Downloader:
         self.format_title(video=True)
         file.download(output_path=self.download_path, filename=self.video_title)  # Downloading video
 
-    def download_audio(self) -> None:
+    def download_audio(self, yt: YouTube = None) -> None:
         """
         Download audio only
 
         :return: None
         """
-        file = self.yt.streams.filter(only_audio=True)
+        file = yt.streams.filter(only_audio=True)
         file = file.get_audio_only()
         file = self.yt.streams.get_by_itag(file.itag)
         self.format_title(audio=True)
         self.show_info(file.filesize, audio=True)
         file.download(output_path=self.download_path, filename=self.audio_title)
 
-    def download_file(self) -> None:
+    def download_file(self, yt: YouTube = None) -> None:
         """
         Download both video and audio
 
@@ -106,7 +125,7 @@ class Downloader:
                 print(f'[INFO] Removing temporary files...')
                 self.rm_tmp_files()
         else:
-            file = self.yt.streams.get_highest_resolution()
+            file = yt.streams.get_highest_resolution()
             self.show_info(file.filesize, video=True)
             file.download(output_path=self.download_path)
 

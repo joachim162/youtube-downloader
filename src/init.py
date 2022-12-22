@@ -96,6 +96,6 @@ def check_parsing(args=args_parsing()) -> Downloader:
 
 if __name__ == "__main__":
     downloader = check_parsing()  # Downloader instance with video information
-    downloader.download()  # Starting downloading
+    downloader.download()  # Start downloading
     if downloader.filename is not None:
         downloader.rename_file()
