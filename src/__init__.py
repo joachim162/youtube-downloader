@@ -1,7 +1,7 @@
 from arguments import Arguments
-from video import Video
+from file import File
 
 if __name__ == '__main__':
     arg = Arguments()
     arg.check_arguments()
-    print(arg)
+

@@ -1,9 +1,10 @@
 from pytube import YouTube
+from arguments import Arguments
 
 
-class Video:
+class File:
     """
-    Represents a single video to download
+    Represents a single file to download
     """
     def __init__(self, url):
         """

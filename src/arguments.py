@@ -1,4 +1,3 @@
-import pathlib
 import os
 import argparse
 from argparse import Namespace
@@ -18,28 +17,28 @@ def parse_arguments() -> Namespace:
 
     :return: Namespace instance for further processing
     """
-    # TODO: Add default string parameters to arguments - to prevent problem when argument is None
     parser = argparse.ArgumentParser(description='Choosing video or audio to download')
-    parser.add_argument('--url', '-u', required=False, default=False, action='store', type=str,
+    parser.add_argument('--url', '-u', required=False, default="", action='store', type=str,
                         help='Specify video URL', dest='url')
-    parser.add_argument('--file', '-f', required=False, default=False, action='store', type=str,
+    parser.add_argument('--file', '-f', required=False, default="", action='store', type=str,
                         help='Specify file path with URLs to load', dest='file')
     parser.add_argument('--video', default=False, required=False, action='store_true', help='Download audio only',
                         dest='video')
     parser.add_argument('--audio', default=False, required=False, action='store_true', help='Download audio only',
                         dest='audio')
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
-                        help='Specify video resolution (1080p)', dest='resolution')
+                        help='Specify video resolution (1080p)', dest='resolution', default="")
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
-                        dest='directory', type=str)
+                        dest='directory', type=str, default="")
     parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
-                        dest='output')
+                        dest='output', default="")
     return parser.parse_args()
 
 
 class Arguments:
 
     def __init__(self):
+
         self.directory: str = ""
         self.output: str = ""
         self.resolution: str = ""
