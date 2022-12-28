@@ -20,7 +20,7 @@ def parse_arguments() -> Namespace:
     parser = argparse.ArgumentParser(description='Choosing video or audio to download')
     parser.add_argument('--url', '-u', required=False, default="", action='store', type=str,
                         help='Specify video URL', dest='url')
-    parser.add_argument('--file', '-f', required=False, default="", action='store', type=str,
+    parser.add_argument('--file', '-f', required=False, default='', action='store', type=str,
                         help='Specify file path with URLs to load', dest='file')
     parser.add_argument('--video', default=False, required=False, action='store_true', help='Download audio only',
                         dest='video')
@@ -31,7 +31,7 @@ def parse_arguments() -> Namespace:
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str, default="")
     parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
-                        dest='output', default="")
+                        dest='output', default='.')
     return parser.parse_args()
 
 
