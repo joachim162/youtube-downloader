@@ -4,5 +4,5 @@ from downloader import Downloader
 
 if __name__ == '__main__':
     arg = Arguments()
-    downloader = Downloader(arg.check_arguments())
-    downloader.download()
+    downloader = Downloader(arg)
+    # downloader.download()

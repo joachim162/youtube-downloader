@@ -72,6 +72,8 @@ class Downloader:
     Represents a class of a download manager
     """
     index = 0  # Index of current downloading file
+    index_video = 0  # Index of current downloading video
+    index_audio = 0  # Index of current downloading audio
 
     def __init__(self, args: Arguments):
         """
@@ -80,6 +82,7 @@ class Downloader:
         :type args: Arguments
         """
         self.args: Arguments = args
+        print(args)
         self.files: list = self.generate_files()
 
     def generate_files(self) -> list:
@@ -90,13 +93,14 @@ class Downloader:
         :rtype: list
         """
         tmp_list: list = []
+        print(self.args.url)
         for url in self.args.url:
             tmp_list.append(File(url))
         return tmp_list
 
     # TODO: Create an algorithm that handles batch downloads
     # TODO: Add a reaction to situation where arguments for video and audio only are both True
-    def download(self):
+    def download(self) -> None:
         if self.args.video_only:
             self.download_video()
         elif self.args.audio_only:
@@ -104,34 +108,32 @@ class Downloader:
         else:
             self.download_file()
 
-    def download_video(self):
+    def download_video(self) -> None:
         for file in self.files:
             video = file.yt.streams.filter(only_video=True)
-            if self.args.resolution is not "":
+            if self.args.resolution != "":
                 video = self.check_resolution(file.yt).first()
             else:
                 # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
                 video = file.yt.streams.get_high_resolution()
             self.show_info(file, video.filesize, video=True)
-            # TODO: In case of downloading multiple files, filename should contain a number increasing
-            #  by 1 with every iteration
-            video.download(output_path=self.args.directory, filename=format_name(file, self.index, video=True))
-            self.index += 1
+            video.download(output_path=self.args.directory, filename=format_name(file, self.index_video, video=True))
+            self.index_video += 1
 
-    def download_audio(self):
+    def download_audio(self) -> None:
         for file in self.files:
             audio = file.yt.streams.filter(only_audio=True)
             audio = audio.get_audio_only()
             audio = file.yt.streams.get_by_itag(audio.itag)
             self.show_info(file, audio.filesize, audio=True)
-            # TODO: In case of downloading multiple files, filename should contain a number increasing
-            #  by 1 by every iteration
-            audio.download(output_path=self.args.directory, filename=self.args.output)
-            self.index += 1
+            audio.download(output_path=self.args.directory, filename=format_name(file, self.index_audio, audio=True))
+            self.index_audio += 1
 
-    def download_file(self):
+    def download_file(self) -> None:
         for file in self.files:
-            pass
+            if self.args.resolution != "":
+                if self.args.resolution > 720:
+                    pass
 
     def check_resolution(self, file: File) -> StreamQuery:
         available_resolutions = file.yt.streams.filter(res=self.args.resolution)
@@ -166,4 +168,3 @@ class Downloader:
         elif audio:
             print(f'[INFO] Downloading audio "{file.title}", '
                   f'with size of {file_size} in MB, to {self.args.directory}')
-
