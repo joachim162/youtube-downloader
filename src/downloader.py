@@ -82,7 +82,6 @@ class Downloader:
         :type args: Arguments
         """
         self.args: Arguments = args
-        print(args)
         self.files: list = self.generate_files()
 
     def generate_files(self) -> list:
