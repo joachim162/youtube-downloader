@@ -32,8 +32,8 @@ def format_name(file: File, index: int, video: bool = False, audio: bool = False
     :type video: bool
     :param audio: Flag that indicates audio
     :type audio: bool
-    :return:
-    :rtype:
+    :return: Formatted file name
+    :rtype: str
     """
     title = file.title
     if video:
@@ -99,8 +99,13 @@ class Downloader:
         return tmp_list
 
     # TODO: Create an algorithm that handles batch downloads
-    # TODO: Add a reaction to situation where arguments for video and audio only are both True
     def download(self) -> None:
+        """
+        Check
+        """
+        # TODO: Add a reaction to situation where arguments for video and audio only are both True
+        for file in self.files:
+            file.filename = format_name()
         if self.args.video_only:
             self.download_video()
         elif self.args.audio_only:
@@ -109,6 +114,9 @@ class Downloader:
             self.download_file()
 
     def download_video(self) -> None:
+        """
+        Download video only
+        """
         for file in self.files:
             video = file.yt.streams.filter(only_video=True)
             if self.args.resolution != "":
@@ -116,26 +124,54 @@ class Downloader:
             else:
                 # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
                 video = file.yt.streams.get_high_resolution()
+            file.filename = format_name(file, self.index_video, video=True)
             self.show_info(file, video.filesize, video=True)
-            video.download(output_path=self.args.directory, filename=format_name(file, self.index_video, video=True))
+            video.download(output_path=self.args.directory, filename=file.filename)
             self.index_video += 1
 
     def download_audio(self) -> None:
+        """
+        Download audio only
+        """
         for file in self.files:
             audio = file.yt.streams.filter(only_audio=True)
             audio = audio.get_audio_only()
             audio = file.yt.streams.get_by_itag(audio.itag)
+            file.filename = format_name(file, self.index_video, audio=True)
             self.show_info(file, audio.filesize, audio=True)
-            audio.download(output_path=self.args.directory, filename=format_name(file, self.index_audio, audio=True))
+            audio.download(output_path=self.args.directory, filename=file.filename)
             self.index_audio += 1
 
     def download_file(self) -> None:
+        """
+        Download video with audio
+        """
+        # TODO: Implement method
+        # TODO: Test method
+        # TODO: Fix issue with filename and title, if custom filename is provided it has to be handled properly
         for file in self.files:
-            if self.args.resolution != "":
-                if self.args.resolution > 720:
-                    pass
+            if self.args.resolution != "" and int(self.args.resolution[:-1]) > 720:
+                self.download_video()
+                self.download_audio()
+                # This is problem, a concat method needs valid video and audio path
+                # concat()
+                self.rm_tmp_files()  # Another problem, the method needs to know which files it's supposed to remove
+
+            else:
+                down_file = file.yt.streams.get_high_resolution()
+                file.filename = format(file, )
+                self.show_info(file, down_file.filesize)
+                down_file.download(output_path=self.args.directory, filename=file.filename)
 
     def check_resolution(self, file: File) -> StreamQuery:
+        """
+        Check if file is available in prompted resolution.
+        If not, user can choose from available resolutions.
+        :param file: Currently downloading file
+        :type file: File
+        :return: Query with available resolutions
+        :rtype: StreamQuery
+        """
         available_resolutions = file.yt.streams.filter(res=self.args.resolution)
         if len(available_resolutions) > 0:
             return available_resolutions
@@ -143,13 +179,12 @@ class Downloader:
             print(f'Unfortunately, {file.title} with resolution {self.args.resolution} is not available')
             print('Here is a list with resolutions that are available:')
             print(get_res(file=file))
-            self.args.resolution = input('Please, choose a resolution from the list above: ')
+            self.args.resolution = int(input('Please, choose a resolution from the list above: '))
             self.check_resolution(file)
 
     def show_info(self, file: File, file_size: float, video: bool = False, audio: bool = False) -> None:
         """
         Print info about download progress
-
         :param file: Current downloading file
         :type file: File
         :param file_size: File size
@@ -158,8 +193,6 @@ class Downloader:
         :type video: bool
         :param audio: Audio flag
         :type audio: bool
-        :return: None
-        :rtype: None
         """
         file_size: int = round(file_size / 1024 ** 2, 2)  # Converting file size to MB and rounding to 2 decimal places
         if video:
@@ -168,3 +201,10 @@ class Downloader:
         elif audio:
             print(f'[INFO] Downloading audio "{file.title}", '
                   f'with size of {file_size} in MB, to {self.args.directory}')
+
+    def rm_tmp_files(self):
+        """
+        Remove temporary video and audio files
+        """
+        # TODO: Implement method
+        pass
