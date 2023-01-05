@@ -3,8 +3,6 @@ import argparse
 from argparse import Namespace
 from urllib.parse import urlparse
 
-res_list: list = [144, 240, 360, 480, 720, 1080, 1440, 2160]  # List with valid YT resolutions
-
 
 def is_directory(path: str):
     return os.path.exists(path)
@@ -20,22 +18,6 @@ def is_url(string):
         return all([result.scheme, result.netloc])
     except ValueError("Prompted URL is not valid"):
         return False
-
-
-def is_resolution(resolution: str) -> str:
-    """
-    Check if resolution from argument is a valid YT resolution
-    :param resolution:
-    :type resolution:
-    :return:
-    :rtype:
-    """
-    # TODO: Test the functionality
-    # TODO: Change the list of resolutions to str, pytube accepts resolution in "1080p" format
-    value = resolution
-    if value[-1] == 'p' and value in res_list:
-        return value
-    raise argparse.ArgumentTypeError(f'{resolution} is not a valid resolution')
 
 
 def parse_arguments() -> Namespace:
@@ -54,11 +36,11 @@ def parse_arguments() -> Namespace:
     parser.add_argument('--audio', default=False, required=False, action='store_true', help='Download audio only',
                         dest='audio')
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
-                        help='Specify video resolution in integer (1080)', dest='resolution', default=0)
+                        help='Specify video resolution in integer (1080)', dest='resolution', default="")
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str, default=os.getcwd())
-    parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
-                        dest='output', default='.')
+    # parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
+    #                    dest='output', default='.')
     return parser.parse_args()
 
 
@@ -67,8 +49,9 @@ def read_file(filepath: str) -> list:
     Read URLS from file, append them to {url} list and return it
     :param filepath: Absolute path to file with URLs
     :type filepath: str
+    :return: List with URLs
+    :rtype: list
     """
-    # TODO: Fix docstring
     tmp_list = []
     with open(filepath, 'r') as f:
         lines = f.readlines()
@@ -81,10 +64,11 @@ class Arguments:
     """
     Represents a class for CLI arguments
     """
+    res_list: list = [144, 240, 360, 480, 720, 1080, 1440, 2160]  # List with valid YT resolutions
 
     def __init__(self):
         self._directory: str = ""
-        self._output: str = ""
+        # self._output: str = ""
         self._resolution: str = ""
         self._audio_only: str = ""
         self._video_only: str = ""
@@ -92,7 +76,7 @@ class Arguments:
         self.check_arguments()
 
     def __str__(self):
-        return f'Directory: {self.directory}, output: {self.output}, resolution: {self.resolution}, ' \
+        return f'Directory: {self.directory}, resolution: {self.resolution}, ' \
                f'audio only: {self.audio_only}, video only: {self.video_only}, URL(s): {self.url}'
 
     @property
@@ -103,13 +87,16 @@ class Arguments:
     def directory(self, value: str):
         self._directory = value
 
+    """
     @property
     def output(self):
         return self._output
+    
 
     @output.setter
     def output(self, value: str):
         self._output = value
+    """
 
     @property
     def resolution(self):
@@ -117,9 +104,13 @@ class Arguments:
 
     @resolution.setter
     def resolution(self, value: str):
-        if value[-1] == 'p' and value in res_list:
+        """
+        Check format of prompted resolution and its presence in {res_list}
+        :param value: Resolution value from CLI arguments
+        :type value: str
+        """
+        if value != "" and value[-1] == 'p' and value in self.res_list:
             self._resolution = value
-        raise argparse.ArgumentTypeError(f'{value} is not a valid resolution')
 
     @property
     def video_only(self):
@@ -142,12 +133,22 @@ class Arguments:
         return self._url
 
     @url.setter
-    def url(self, value: str):
+    def url(self, value: list):
+        """
+        Check {url} argument and test if it's a single URL or a file path
+        :param value: URL argument
+        :type value: str
+        """
+        # TODO: Test method
+        try:
+            url_arg, file_arg = value
+        except ValueError:
+            raise ValueError("Pass an iterable with two items")
         tmp_list = []
-        if value != "" and is_file(value):
-            tmp_list = read_file(value)
-        elif is_url(value):
-            tmp_list.append(value)
+        if file_arg != "" and is_file(file_arg):
+            tmp_list = read_file(file_arg)
+        elif is_url(url_arg):
+            tmp_list.append(url_arg)
         else:
             raise ValueError("Single URL or a file path with multiple URLs have to be specified")
         self._url = tmp_list
@@ -156,12 +157,11 @@ class Arguments:
         """
         Checking CLI arguments
         """
-        # TODO: Implement getters and setters for this section and move the if statement to them
         args: Namespace = parse_arguments()
 
         self.directory = args.directory
-        self.output = args.output
+        # self.output = args.output
         self.resolution = args.resolution
         self.audio_only = args.audio
         self.video_only = args.video
-        self.url = args.url
+        self.url = args.url, args.file

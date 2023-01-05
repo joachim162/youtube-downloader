@@ -1,56 +1,9 @@
+from typing import List, Any
 from file import File
 from arguments import Arguments
 from pytube import YouTube, Stream, StreamQuery
 from converter import concat
-
-
-def help_format_name(filename: str) -> str:
-    """
-    Remove unwanted characters from file name
-    :param filename: File name to format
-    :type filename: str
-    :return: Formatted file name
-    :rtype: str
-    """
-    filename = filename.strip()
-    filename = filename.replace('"', '')
-    filename = filename.replace(' ', '_')
-    filename = filename.replace('/', '')
-    filename = filename.replace("'", "")
-    return filename
-
-
-def format_name(file: File, index: int, video: bool = False, audio: bool = False) -> str:
-    # TODO: Implement a function, that if an index is greater than zero, index will be added to the file name
-    """
-    Reformat file name
-    :param index: Current index of file in a for loop of download methods
-    :type index: int
-    :param file: Current downloading file
-    :type file: File
-    :param video: Flag that indicates video
-    :type video: bool
-    :param audio: Flag that indicates audio
-    :type audio: bool
-    :return: Formatted file name
-    :rtype: str
-    """
-    title = file.title
-    if video:
-        new_title = help_format_name(title)
-        if '.mp4' not in new_title:
-            new_title += '.mp4'
-            print(f'video title: {new_title}')
-            return new_title
-    elif audio:
-        new_title = help_format_name(title)
-        if '.mp4' in new_title:
-            new_title = new_title[:-3]  # Removing .mp4 from audio file
-            new_title += '.mp3'
-        elif '.mp3' not in title:
-            title += '.mp3'
-            print(f'audio title: {new_title}')
-        return new_title
+import os
 
 
 def get_res(file: File) -> list:
@@ -65,6 +18,18 @@ def get_res(file: File) -> list:
     for res in file.yt.streams.filter(only_video=True):
         resolutions.append(res.resolution)
     return list(dict.fromkeys(resolutions))  # Removing duplicates
+
+
+def rm_tmp_files(video_path: list, audio_path: list):
+    """
+    Remove temporary video and audio files
+    """
+    # TODO: Implement method
+    # TODO: Make sure to recognize tmp file over the final
+    # One way to do so is to rename the file during concat method
+    for video, audio in zip(video_path, audio_path):
+        os.remove(video)
+        os.remove(audio)
 
 
 class Downloader:
@@ -92,9 +57,8 @@ class Downloader:
         :rtype: list
         """
         tmp_list: list = []
-        print(self.args.url)
         for url in self.args.url:
-            tmp_list.append(File(url))
+            tmp_list.append(File(url, self.args.video_only, self.args.audio_only))
         return tmp_list
 
     # TODO: Create an algorithm that handles batch downloads
@@ -103,8 +67,6 @@ class Downloader:
         Check
         """
         # TODO: Add a reaction to situation where arguments for video and audio only are both True
-        for file in self.files:
-            file.filename = format_name()
         if self.args.video_only:
             self.download_video()
         elif self.args.audio_only:
@@ -112,10 +74,15 @@ class Downloader:
         else:
             self.download_file()
 
-    def download_video(self) -> None:
+    def download_video(self) -> list[str]:
         """
         Download video only
+        :return: Paths to saved video files
+        :rtype: list[str]
         """
+        # Absolute paths to saved video files
+        paths: list = []
+        # TODO: Test if it's necessary to format filename
         for file in self.files:
             video = file.yt.streams.filter(only_video=True)
             if self.args.resolution != "":
@@ -123,23 +90,29 @@ class Downloader:
             else:
                 # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
                 video = file.yt.streams.get_high_resolution()
-            file.filename = format_name(file, self.index_video, video=True)
-            self.show_info(file, video.filesize, video=True)
-            video.download(output_path=self.args.directory, filename=file.filename)
+            self.show_info(file, video.filesize_mb, video=True)
+            paths.append(video.download(output_path=self.args.directory, filename=file.filename))
             self.index_video += 1
+        return paths
 
-    def download_audio(self) -> None:
+    def download_audio(self) -> list[str]:
         """
         Download audio only
+        :return: Paths to saved video files
+        :rtype: list[str]
         """
+        # Absolute paths to saved audio files
+        paths: list = []
         for file in self.files:
             audio = file.yt.streams.filter(only_audio=True)
             audio = audio.get_audio_only()
             audio = file.yt.streams.get_by_itag(audio.itag)
-            file.filename = format_name(file, self.index_video, audio=True)
-            self.show_info(file, audio.filesize, audio=True)
-            audio.download(output_path=self.args.directory, filename=file.filename)
+            # file.filename = format_name(file, audio=True)
+            self.show_info(file, audio.filesize_mb, audio=True)
+            paths.append(audio.download(output_path=self.args.directory, filename=file.filename))
+            # audio.download(output_path=self.args.directory)
             self.index_audio += 1
+        return paths
 
     def download_file(self) -> None:
         """
@@ -150,16 +123,15 @@ class Downloader:
         # TODO: Fix issue with filename and title, if custom filename is provided it has to be handled properly
         for file in self.files:
             if self.args.resolution != "" and int(self.args.resolution[:-1]) > 720:
-                self.download_video()
-                self.download_audio()
+                paths_video = self.download_video()
+                paths_audio = self.download_audio()
                 # This is problem, a concat method needs valid video and audio path
-                # concat()
-                self.rm_tmp_files()  # Another problem, the method needs to know which files it's supposed to remove
+                # concat(paths_video, paths_audio)
+                rm_tmp_files(paths_video, paths_audio)
 
             else:
                 down_file = file.yt.streams.get_high_resolution()
-                file.filename = format(file, )
-                self.show_info(file, down_file.filesize)
+                self.show_info(file, down_file.filesize_mb)
                 down_file.download(output_path=self.args.directory, filename=file.filename)
 
     def check_resolution(self, file: File) -> StreamQuery:
@@ -181,29 +153,21 @@ class Downloader:
             self.args.resolution = int(input('Please, choose a resolution from the list above: '))
             self.check_resolution(file)
 
-    def show_info(self, file: File, file_size: float, video: bool = False, audio: bool = False) -> None:
+    def show_info(self, file: File, filesize_mb: float, video: bool = False, audio: bool = False) -> None:
         """
         Print info about download progress
         :param file: Current downloading file
         :type file: File
-        :param file_size: File size
-        :type file_size: float
+        :param filesize_mb: File size
+        :type filesize_mb: float
         :param video: Video flag
         :type video: bool
         :param audio: Audio flag
         :type audio: bool
         """
-        file_size: int = round(file_size / 1024 ** 2, 2)  # Converting file size to MB and rounding to 2 decimal places
         if video:
-            print(f'[INFO] Downloading video "{file.title}", '
-                  f'with size of {file_size} in MB, to {self.args.directory}')
+            print(f'[INFO] Downloading video "{file.filename}", '
+                  f'with size of {filesize_mb} in MB, to {self.args.directory}')
         elif audio:
-            print(f'[INFO] Downloading audio "{file.title}", '
-                  f'with size of {file_size} in MB, to {self.args.directory}')
-
-    def rm_tmp_files(self):
-        """
-        Remove temporary video and audio files
-        """
-        # TODO: Implement method
-        pass
+            print(f'[INFO] Downloading audio "{file.filename}", '
+                  f'with size of {filesize_mb} in MB, to {self.args.directory}')

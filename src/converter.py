@@ -1,7 +1,7 @@
 import ffmpeg
 
 
-def concat(video_path: str, audio_path: str, video_title: str, target_dir: str) -> None:
+def concat(video_path: list, audio_path: list, video_title: str, target_dir: str) -> None:
     """
     Merge video and audio to one file
 
@@ -11,6 +11,7 @@ def concat(video_path: str, audio_path: str, video_title: str, target_dir: str) 
     :param target_dir: target directory
     :return: None
     """
+    # TODO: Re-implement method
     input_video = ffmpeg.input(video_path)
     input_audio = ffmpeg.input(audio_path)
     # variables {v} and {a} are parameters for a number of streams
