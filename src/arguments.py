@@ -36,7 +36,7 @@ def parse_arguments() -> Namespace:
     parser.add_argument('--audio', default=False, required=False, action='store_true', help='Download audio only',
                         dest='audio')
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
-                        help='Specify video resolution in integer (1080)', dest='resolution', default="")
+                        help='Specify video resolution in integer (1080p)', dest='resolution', default="")
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str, default=os.getcwd())
     # parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
@@ -64,7 +64,8 @@ class Arguments:
     """
     Represents a class for CLI arguments
     """
-    res_list: list = [144, 240, 360, 480, 720, 1080, 1440, 2160]  # List with valid YT resolutions
+    # List with valid YT resolutions
+    res_list: list[str] = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"]
 
     def __init__(self):
         self._directory: str = ""
@@ -139,7 +140,6 @@ class Arguments:
         :param value: URL argument
         :type value: str
         """
-        # TODO: Test method
         try:
             url_arg, file_arg = value
         except ValueError:

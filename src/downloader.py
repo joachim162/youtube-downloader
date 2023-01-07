@@ -2,8 +2,9 @@ from typing import List, Any
 from file import File
 from arguments import Arguments
 from pytube import YouTube, Stream, StreamQuery
-from converter import concat
 import os
+
+# TODO: Make code more readable
 
 
 def get_res(file: File) -> list:
@@ -20,13 +21,29 @@ def get_res(file: File) -> list:
     return list(dict.fromkeys(resolutions))  # Removing duplicates
 
 
+def concat(video_path: list, audio_path: list) -> None:
+    """
+    Merge video and audio to one file
+    :param video_path: Paths to video files
+    :type video_path: list
+    :param audio_path: Paths to audio files
+    :type audio_path: list
+    """
+    # path to file looks like this:
+    # 'C:\\Users\\holec\\pythonProject\\youtube-downloader\\The_Black_Keys_-_Lonely_Boy_[Official_Music_Video].mp3'
+    from moviepy.editor import AudioFileClip, VideoFileClip
+    for video_path, audio_path in zip(video_path, audio_path):
+        video = VideoFileClip(video_path)
+        audio = AudioFileClip(audio_path)
+        final_clip = video.set_audio(audio)
+        output: str = video_path[:-4] + "-{CONVERTED}" + video_path[len(video_path) - 4:]
+        final_clip.write_videofile(output)
+
+
 def rm_tmp_files(video_path: list, audio_path: list):
     """
     Remove temporary video and audio files
     """
-    # TODO: Implement method
-    # TODO: Make sure to recognize tmp file over the final
-    # One way to do so is to rename the file during concat method
     for video, audio in zip(video_path, audio_path):
         os.remove(video)
         os.remove(audio)
@@ -36,9 +53,6 @@ class Downloader:
     """
     Represents a class of a download manager
     """
-    index = 0  # Index of current downloading file
-    index_video = 0  # Index of current downloading video
-    index_audio = 0  # Index of current downloading audio
 
     def __init__(self, args: Arguments):
         """
@@ -61,18 +75,17 @@ class Downloader:
             tmp_list.append(File(url, self.args.video_only, self.args.audio_only))
         return tmp_list
 
-    # TODO: Create an algorithm that handles batch downloads
     def download(self) -> None:
         """
         Check
         """
-        # TODO: Add a reaction to situation where arguments for video and audio only are both True
-        if self.args.video_only:
+        if (self.args.video_only and self.args.audio_only) or (not self.args.video_only and not self.args.audio_only):
+            print('Downloading file')
+            self.download_file()
+        elif self.args.video_only:
             self.download_video()
         elif self.args.audio_only:
             self.download_audio()
-        else:
-            self.download_file()
 
     def download_video(self) -> list[str]:
         """
@@ -82,17 +95,15 @@ class Downloader:
         """
         # Absolute paths to saved video files
         paths: list = []
-        # TODO: Test if it's necessary to format filename
         for file in self.files:
             video = file.yt.streams.filter(only_video=True)
             if self.args.resolution != "":
-                video = self.check_resolution(file.yt).first()
+                video = self.check_resolution(file).first()
             else:
                 # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
-                video = file.yt.streams.get_high_resolution()
+                video = file.yt.streams.get_highest_resolution()
             self.show_info(file, video.filesize_mb, video=True)
-            paths.append(video.download(output_path=self.args.directory, filename=file.filename))
-            self.index_video += 1
+            paths.append(video.download(output_path=self.args.directory, filename=file.filename.get("video")))
         return paths
 
     def download_audio(self) -> list[str]:
@@ -107,32 +118,29 @@ class Downloader:
             audio = file.yt.streams.filter(only_audio=True)
             audio = audio.get_audio_only()
             audio = file.yt.streams.get_by_itag(audio.itag)
-            # file.filename = format_name(file, audio=True)
             self.show_info(file, audio.filesize_mb, audio=True)
-            paths.append(audio.download(output_path=self.args.directory, filename=file.filename))
-            # audio.download(output_path=self.args.directory)
-            self.index_audio += 1
+            paths.append(audio.download(output_path=self.args.directory, filename=file.filename.get('audio')))
         return paths
 
     def download_file(self) -> None:
         """
         Download video with audio
         """
-        # TODO: Implement method
-        # TODO: Test method
-        # TODO: Fix issue with filename and title, if custom filename is provided it has to be handled properly
-        for file in self.files:
-            if self.args.resolution != "" and int(self.args.resolution[:-1]) > 720:
-                paths_video = self.download_video()
-                paths_audio = self.download_audio()
-                # This is problem, a concat method needs valid video and audio path
-                # concat(paths_video, paths_audio)
-                rm_tmp_files(paths_video, paths_audio)
-
-            else:
-                down_file = file.yt.streams.get_high_resolution()
+        if self.args.resolution != "" and int(self.args.resolution[:-1]) > 720:
+            print('Downloading video files')
+            paths_video = self.download_video()
+            print('Downloading audio files')
+            paths_audio = self.download_audio()
+            print('Merging files together')
+            concat(paths_video, paths_audio)
+            print('Removing tmp files')
+            rm_tmp_files(paths_video, paths_audio)
+        else:
+            for file in self.files:
+                print('Downloading 720p video')
+                down_file = file.yt.streams.get_highest_resolution()
                 self.show_info(file, down_file.filesize_mb)
-                down_file.download(output_path=self.args.directory, filename=file.filename)
+                down_file.download(output_path=self.args.directory, filename=file.filename.get('video'))
 
     def check_resolution(self, file: File) -> StreamQuery:
         """
@@ -166,8 +174,10 @@ class Downloader:
         :type audio: bool
         """
         if video:
-            print(f'[INFO] Downloading video "{file.filename}", '
-                  f'with size of {filesize_mb} in MB, to {self.args.directory}')
+            filename_video = file.filename.get('video')
+            print(f'[INFO] Downloading video "{filename_video}",'
+                  f'with size of {filesize_mb} MB, to {self.args.directory}')
         elif audio:
-            print(f'[INFO] Downloading audio "{file.filename}", '
-                  f'with size of {filesize_mb} in MB, to {self.args.directory}')
+            filename_audio = file.filename.get('audio')
+            print(f'[INFO] Downloading audio "{filename_audio}", '
+                  f'with size of {filesize_mb} MB, to {self.args.directory}')
