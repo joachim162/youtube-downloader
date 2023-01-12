@@ -1,5 +1,4 @@
 from pytube import YouTube
-from arguments import Arguments
 
 
 def help_format_name(filename: str) -> str:

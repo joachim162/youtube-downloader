@@ -1,5 +1,6 @@
 import os
 import argparse
+import sys
 from argparse import Namespace
 from urllib.parse import urlparse
 
@@ -27,7 +28,7 @@ def parse_arguments() -> Namespace:
     :rtype: Namespace
     """
     parser = argparse.ArgumentParser(description='Choosing video or audio to download')
-    parser.add_argument('--url', '-u', required=False, default="", action='store', type=str,
+    parser.add_argument('--url', '-u', required=False, default='', action='store', type=str,
                         help='Specify video URL', dest='url')
     parser.add_argument('--file', '-f', required=False, default='', action='store', type=str,
                         help='Specify file path with URLs to load', dest='file')
@@ -39,8 +40,6 @@ def parse_arguments() -> Namespace:
                         help='Specify video resolution in integer (1080p)', dest='resolution', default="")
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str, default=os.getcwd())
-    # parser.add_argument('--output', '-o', help='Output filename', required=False, action='store', type=str,
-    #                    dest='output', default='.')
     return parser.parse_args()
 
 
@@ -87,17 +86,6 @@ class Arguments:
     @directory.setter
     def directory(self, value: str):
         self._directory = value
-
-    """
-    @property
-    def output(self):
-        return self._output
-    
-
-    @output.setter
-    def output(self, value: str):
-        self._output = value
-    """
 
     @property
     def resolution(self):
@@ -157,11 +145,17 @@ class Arguments:
         """
         Checking CLI arguments
         """
+        # Getting CLI arguments
         args: Namespace = parse_arguments()
 
         self.directory = args.directory
-        # self.output = args.output
         self.resolution = args.resolution
         self.audio_only = args.audio
         self.video_only = args.video
-        self.url = args.url, args.file
+        # Exit program if required arguments are not specified
+        try:
+            self.url = args.url, args.file
+        except ValueError:
+            print("Missing --url of --file argument")
+            sys.exit()
+

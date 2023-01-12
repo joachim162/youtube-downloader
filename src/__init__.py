@@ -1,6 +1,6 @@
 from arguments import Arguments
-from file import File
 from downloader import Downloader
+from file import File
 
 if __name__ == '__main__':
     arg = Arguments()

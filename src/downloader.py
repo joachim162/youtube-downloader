@@ -29,8 +29,6 @@ def concat(video_path: list, audio_path: list) -> None:
     :param audio_path: Paths to audio files
     :type audio_path: list
     """
-    # path to file looks like this:
-    # 'C:\\Users\\holec\\pythonProject\\youtube-downloader\\The_Black_Keys_-_Lonely_Boy_[Official_Music_Video].mp3'
     from moviepy.editor import AudioFileClip, VideoFileClip
     for video_path, audio_path in zip(video_path, audio_path):
         video = VideoFileClip(video_path)
@@ -77,7 +75,7 @@ class Downloader:
 
     def download(self) -> None:
         """
-        Check
+        Check arguments and call a proper download method
         """
         if (self.args.video_only and self.args.audio_only) or (not self.args.video_only and not self.args.audio_only):
             print('Downloading file')
@@ -93,7 +91,7 @@ class Downloader:
         :return: Paths to saved video files
         :rtype: list[str]
         """
-        # Absolute paths to saved video files
+        # Absolute paths of saved video files
         paths: list = []
         for file in self.files:
             video = file.yt.streams.filter(only_video=True)
@@ -103,7 +101,9 @@ class Downloader:
                 # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
                 video = file.yt.streams.get_highest_resolution()
             self.show_info(file, video.filesize_mb, video=True)
-            paths.append(video.download(output_path=self.args.directory, filename=file.filename.get("video")))
+            # Download video and save its path to variable
+            path = video.download(output_path=self.args.directory, filename=file.filename.get("video"))
+            paths.append(path)
         return paths
 
     def download_audio(self) -> list[str]:
@@ -119,7 +119,9 @@ class Downloader:
             audio = audio.get_audio_only()
             audio = file.yt.streams.get_by_itag(audio.itag)
             self.show_info(file, audio.filesize_mb, audio=True)
-            paths.append(audio.download(output_path=self.args.directory, filename=file.filename.get('audio')))
+            # Download audio and save its path to variable
+            path = audio.download(output_path=self.args.directory, filename=file.filename.get('audio'))
+            paths.append(path)
         return paths
 
     def download_file(self) -> None:
@@ -155,7 +157,7 @@ class Downloader:
         if len(available_resolutions) > 0:
             return available_resolutions
         else:
-            print(f'Unfortunately, {file.title} with resolution {self.args.resolution} is not available')
+            print(f'Unfortunately, "{file.title}" with resolution {self.args.resolution} is not available')
             print('Here is a list with resolutions that are available:')
             print(get_res(file=file))
             self.args.resolution = int(input('Please, choose a resolution from the list above: '))
@@ -166,14 +168,19 @@ class Downloader:
         Print info about download progress
         :param file: Current downloading file
         :type file: File
-        :param filesize_mb: File size
+        :param filesize_mb: File size in MB
         :type filesize_mb: float
         :param video: Video flag
         :type video: bool
         :param audio: Audio flag
         :type audio: bool
         """
-        if video:
+        # Video and audio argument may not be specified, but info has to be shown
+        if not video and not audio:
+            filename_video = file.filename.get('video')
+            print(f'[INFO] Downloading file "{filename_video}",'
+                  f'with size of {filesize_mb} MB, to {self.args.directory}')
+        elif video:
             filename_video = file.filename.get('video')
             print(f'[INFO] Downloading video "{filename_video}",'
                   f'with size of {filesize_mb} MB, to {self.args.directory}')
