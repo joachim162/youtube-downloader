@@ -12,7 +12,7 @@ def help_format_name(filename: str) -> str:
     # TODO: Test
     filename = filename.strip()
     filename = filename.replace('"', '')
-    filename = filename.replace(' ', '_')
+    filename = filename.replace(' ', '-')
     filename = filename.replace('/', '')
     filename = filename.replace("'", "")
     filename = filename.replace("|", "")

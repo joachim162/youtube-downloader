@@ -3,3 +3,7 @@ src/__pycache__/
  __pycache__
  src/test
  src/test.py
+
+# Ignore files from testing functionality
+*.mp3
+*.mp4
