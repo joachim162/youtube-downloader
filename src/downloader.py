@@ -5,6 +5,7 @@ from pytube import YouTube, Stream, StreamQuery
 import os
 
 # TODO: Make code more readable
+# TODO: Add support for downloading playlists
 
 
 def get_res(file: File) -> list:

@@ -3,6 +3,7 @@ import argparse
 import sys
 from argparse import Namespace
 from urllib.parse import urlparse
+from pytube import Playlist
 
 
 def is_directory(path: str):
@@ -18,6 +19,20 @@ def is_url(string):
         result = urlparse(string)
         return all([result.scheme, result.netloc])
     except ValueError("Prompted URL is not valid"):
+        return False
+
+def is_playlist(url: str) -> bool:
+    """
+    Check if URL is a playlist
+    :param url: Potential playlist
+    :type url: str
+    :return: True if URL is a playlist, False otherwise
+    """
+    p = Playlist(url)
+    try:
+        return len(p) > 0
+    except:
+        print('Entered URL is not a playlist')
         return False
 
 
@@ -137,8 +152,11 @@ class Arguments:
             tmp_list = read_file(file_arg)
         elif is_url(url_arg):
             tmp_list.append(url_arg)
+            if is_playlist(url_arg):
+                # TODO: Download the playlist
+                pass
         else:
-            raise ValueError("Single URL or a file path with multiple URLs have to be specified")
+            raise ValueError("Single URL or file path with multiple URLs have to be specified")
         self._url = tmp_list
 
     def check_arguments(self):

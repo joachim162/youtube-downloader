@@ -1,3 +1,7 @@
-video = 'C:\\Users\\holec\\pythonProject\\youtube-downloader\\The_Black_Keys_-_Lonely_Boy_[Official_Music_Video].mp3'
-output = video[:-4] + "-{CONVERTED}" + video[len(video)-4:]
-print(output)
+from pytube import Playlist
+
+p = Playlist('https://www.youtube.com/watch?v=6yCIDkFI7ew&list=PLTfzGEQsw7fWPaQF0jG8HC8rR2YrQnUt3')
+try:
+    print(len(p))
+except:
+    print('Entered URL is not a playlist')
