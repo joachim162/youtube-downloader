@@ -52,7 +52,7 @@ def parse_arguments() -> Namespace:
     parser.add_argument('--audio', default=False, required=False, action='store_true', help='Download audio only',
                         dest='audio')
     parser.add_argument('--resolution', '-r', required=False, action='store', type=str,
-                        help='Specify video resolution in integer (1080p)', dest='resolution', default="")
+                        help='Specify video resolution in "1080p" format', dest='resolution', default="")
     parser.add_argument('--directory', '-d', help='Download directory', action='store', required=False,
                         dest='directory', type=str, default=os.getcwd())
     return parser.parse_args()
