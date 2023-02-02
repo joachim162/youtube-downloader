@@ -9,7 +9,7 @@ These instructions will give you an idea how to use this tool. The most importan
 ```
 usage: __init__.py [-h] [--url URL] [--file FILE] [--video] [--audio] [--resolution RESOLUTION] [--directory DIRECTORY]
 
-Choosing video or audio to download
+Available options:
 
 options:
   -h, --help            show this help message and exit

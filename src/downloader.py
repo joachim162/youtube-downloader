@@ -1,20 +1,15 @@
-from typing import List, Any
 from file import File
 from arguments import Arguments
-from pytube import YouTube, Stream, StreamQuery
+from pytube import StreamQuery
 import os
 
-# TODO: Make code more readable
-# TODO: Add support for downloading playlists
 
-
-def get_res(file: File) -> list:
+def get_res(file: File) -> list[StreamQuery]:
     """
     Return a list of available resolutions
     :param file: Current downloading file
     :type file: File
     :return: List of available resolutions
-    :rtype: list
     """
     resolutions: list = []
     for res in file.yt.streams.filter(only_video=True):
@@ -62,12 +57,11 @@ class Downloader:
         self.args: Arguments = args
         self.files: list = self.generate_files()
 
-    def generate_files(self) -> list:
+    def generate_files(self) -> list[File]:
         """
         Create instances of File class and append them to {self.files} list
 
         :return: List of URLs
-        :rtype: list
         """
         tmp_list: list = []
         for url in self.args.url:
@@ -111,7 +105,6 @@ class Downloader:
         """
         Download audio only
         :return: Paths to saved video files
-        :rtype: list[str]
         """
         # Absolute paths to saved audio files
         paths: list = []
@@ -138,6 +131,7 @@ class Downloader:
             concat(paths_video, paths_audio)
             print('Removing tmp files')
             rm_tmp_files(paths_video, paths_audio)
+            print("[DONE]")
         else:
             for file in self.files:
                 print('Downloading 720p video')
@@ -152,7 +146,6 @@ class Downloader:
         :param file: Currently downloading file
         :type file: File
         :return: Query with available resolutions
-        :rtype: StreamQuery
         """
         available_resolutions = file.yt.streams.filter(res=self.args.resolution)
         if len(available_resolutions) > 0:

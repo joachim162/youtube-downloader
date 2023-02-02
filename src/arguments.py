@@ -32,7 +32,7 @@ def is_playlist(url: str) -> bool:
     try:
         return len(p) > 0
     except:
-        print('Entered URL is not a playlist')
+        # print('Entered URL is not a playlist')
         return False
 
 
@@ -42,7 +42,7 @@ def parse_arguments() -> Namespace:
     :return: CLI arguments
     :rtype: Namespace
     """
-    parser = argparse.ArgumentParser(description='Choosing video or audio to download')
+    parser = argparse.ArgumentParser(description='Available options:')
     parser.add_argument('--url', '-u', required=False, default='', action='store', type=str,
                         help='Specify video URL', dest='url')
     parser.add_argument('--file', '-f', required=False, default='', action='store', type=str,
@@ -64,7 +64,6 @@ def read_file(filepath: str) -> list:
     :param filepath: Absolute path to file with URLs
     :type filepath: str
     :return: List with URLs
-    :rtype: list
     """
     tmp_list = []
     with open(filepath, 'r') as f:
@@ -78,6 +77,7 @@ class Arguments:
     """
     Represents a class for CLI arguments
     """
+
     # List with valid YT resolutions
     res_list: list[str] = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p"]
 
@@ -100,7 +100,10 @@ class Arguments:
 
     @directory.setter
     def directory(self, value: str):
-        self._directory = value
+        if is_directory(value):
+            self._directory = value
+        else:
+            sys.exit(f"Directory: '{value}' does not exist.")
 
     @property
     def resolution(self):
@@ -137,7 +140,7 @@ class Arguments:
         return self._url
 
     @url.setter
-    def url(self, value: list):
+    def url(self, value: list) -> None:
         """
         Check {url} argument and test if it's a single URL or a file path
         :param value: URL argument
@@ -153,7 +156,6 @@ class Arguments:
         elif is_url(url_arg):
             tmp_list.append(url_arg)
             if is_playlist(url_arg):
-                # TODO: Download the playlist
                 pass
         else:
             raise ValueError("Single URL or file path with multiple URLs have to be specified")
@@ -163,6 +165,7 @@ class Arguments:
         """
         Checking CLI arguments
         """
+
         # Getting CLI arguments
         args: Namespace = parse_arguments()
 
@@ -170,6 +173,7 @@ class Arguments:
         self.resolution = args.resolution
         self.audio_only = args.audio
         self.video_only = args.video
+        
         # Exit program if required arguments are not specified
         try:
             self.url = args.url, args.file

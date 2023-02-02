@@ -1,8 +1,8 @@
 from arguments import Arguments
 from downloader import Downloader
-from file import File
+
 
 if __name__ == '__main__':
-    arg = Arguments()
-    downloader = Downloader(arg)
-    downloader.download()
+    arg = Arguments()  # Load arguments
+    downloader = Downloader(arg)  # Create downloader and pass arguments
+    downloader.download()  # Start downloading
