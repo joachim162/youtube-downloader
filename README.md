@@ -33,7 +33,7 @@ With the executable, you can copy it to PATH environment and use it directly fro
 
 ## Built With
 
-The script itself use Python only. Downloading content from YouTube is handled
+The script itself uses Python only. Downloading content from YouTube is handled
 by [pytube](https://pypi.org/project/pytube/). When downloading video with resolution higer than
 720p, audio and video files have to be downloaded separately and subsequently merged together using [moviepy](https://pypi.org/project/moviepy). Unfortunately this approach is quite slow, considered using CPU only. I am already finding a way to take advantage of GPU acceleration that should speed up the process.
 ## Authors
