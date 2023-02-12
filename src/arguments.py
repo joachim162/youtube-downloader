@@ -60,7 +60,7 @@ def parse_arguments() -> Namespace:
 
 def read_file(filepath: str) -> list:
     """
-    Read URLS from file, append them to {url} list and return it
+    Read URLS from file, append them to {tmp_list} list and return it
     :param filepath: Absolute path to file with URLs
     :type filepath: str
     :return: List with URLs
@@ -71,7 +71,6 @@ def read_file(filepath: str) -> list:
         for line in lines:
             tmp_list.append(line.strip())
     return tmp_list
-
 
 class Arguments:
     """
@@ -150,13 +149,15 @@ class Arguments:
             url_arg, file_arg = value
         except ValueError:
             raise ValueError("Pass an iterable with two items")
+        
         tmp_list = []
         if file_arg != "" and is_file(file_arg):
             tmp_list = read_file(file_arg)
         elif is_url(url_arg):
             tmp_list.append(url_arg)
             if is_playlist(url_arg):
-                pass
+                p = Playlist(url_arg)
+                tmp_list = list(p.video_urls)
         else:
             raise ValueError("Single URL or file path with multiple URLs have to be specified")
         self._url = tmp_list

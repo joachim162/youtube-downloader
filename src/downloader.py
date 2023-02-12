@@ -2,19 +2,10 @@ from file import File
 from arguments import Arguments
 from pytube import StreamQuery
 import os
+import sys
 
 
-def get_res(file: File) -> list[StreamQuery]:
-    """
-    Return a list of available resolutions
-    :param file: Current downloading file
-    :type file: File
-    :return: List of available resolutions
-    """
-    resolutions: list = []
-    for res in file.yt.streams.filter(only_video=True):
-        resolutions.append(res.resolution)
-    return list(dict.fromkeys(resolutions))  # Removing duplicates
+# TODO: Add support for choosing FPS
 
 
 def concat(video_path: list, audio_path: list) -> None:
@@ -25,13 +16,21 @@ def concat(video_path: list, audio_path: list) -> None:
     :param audio_path: Paths to audio files
     :type audio_path: list
     """
-    from moviepy.editor import AudioFileClip, VideoFileClip
+    import subprocess
     for video_path, audio_path in zip(video_path, audio_path):
-        video = VideoFileClip(video_path)
-        audio = AudioFileClip(audio_path)
-        final_clip = video.set_audio(audio)
-        output: str = video_path[:-4] + "-{CONVERTED}" + video_path[len(video_path) - 4:]
-        final_clip.write_videofile(output)
+        output_path = video_path[:-4] + "-{CONVERTED}" + video_path[len(video_path) - 4:]
+        cmd = [
+            'ffmpeg',
+            '-i', video_path,
+            '-i', audio_path,
+            '-c:v', 'copy',
+            '-c:a', 'aac',
+            output_path
+        ]
+        try:
+            subprocess.run(cmd)
+        except:
+            sys.exit('FFmpeg not installed, exiting...')
 
 
 def rm_tmp_files(video_path: list, audio_path: list):
@@ -70,10 +69,9 @@ class Downloader:
 
     def download(self) -> None:
         """
-        Check arguments and call a proper download method
+        Check arguments and start download
         """
         if (self.args.video_only and self.args.audio_only) or (not self.args.video_only and not self.args.audio_only):
-            print('Downloading file')
             self.download_file()
         elif self.args.video_only:
             self.download_video()
@@ -89,12 +87,12 @@ class Downloader:
         # Absolute paths of saved video files
         paths: list = []
         for file in self.files:
-            video = file.yt.streams.filter(only_video=True)
             if self.args.resolution != "":
-                video = self.check_resolution(file).first()
+                video = self.check_resolution(file).first()  # Getting video in the specified resolution or the highest possible
             else:
-                # Getting video in the highest resolution (in pytube case, it's 720p for whatever reason)
+                # Getting video in the highest resolution (in pytube case 720p)
                 video = file.yt.streams.get_highest_resolution()
+
             self.show_info(file, video.filesize_mb, video=True)
             # Download video and save its path to variable
             path = video.download(output_path=self.args.directory, filename=file.filename.get("video"))
@@ -123,18 +121,15 @@ class Downloader:
         Download video with audio
         """
         if self.args.resolution != "" and int(self.args.resolution[:-1]) > 720:
-            print('Downloading video files')
             paths_video = self.download_video()
-            print('Downloading audio files')
             paths_audio = self.download_audio()
             print('Merging files together')
             concat(paths_video, paths_audio)
-            print('Removing tmp files')
+            print('Removing temporary files')
             rm_tmp_files(paths_video, paths_audio)
             print("[DONE]")
         else:
             for file in self.files:
-                print('Downloading 720p video')
                 down_file = file.yt.streams.get_highest_resolution()
                 self.show_info(file, down_file.filesize_mb)
                 down_file.download(output_path=self.args.directory, filename=file.filename.get('video'))
@@ -142,20 +137,22 @@ class Downloader:
     def check_resolution(self, file: File) -> StreamQuery:
         """
         Check if file is available in prompted resolution.
-        If not, user can choose from available resolutions.
+        If not, the next highest resolution is returned.
         :param file: Currently downloading file
         :type file: File
-        :return: Query with available resolutions
+        :return: Query with available resolution
         """
         available_resolutions = file.yt.streams.filter(res=self.args.resolution)
         if len(available_resolutions) > 0:
+            print(file.title)
+            print(available_resolutions)
             return available_resolutions
         else:
-            print(f'Unfortunately, "{file.title}" with resolution {self.args.resolution} is not available')
-            print('Here is a list with resolutions that are available:')
-            print(get_res(file=file))
-            self.args.resolution = int(input('Please, choose a resolution from the list above: '))
-            self.check_resolution(file)
+            print(f'Unfortunately, "{file.title}" is not available in {self.args.resolution}.')
+            highest_res = file.yt.streams.filter(only_video=True, mime_type='video/mp4')
+            print(f'Choosing the highest resolution: {highest_res.first().resolution}')
+            print(type(highest_res))
+            return highest_res
 
     def show_info(self, file: File, filesize_mb: float, video: bool = False, audio: bool = False) -> None:
         """

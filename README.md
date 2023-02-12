@@ -35,7 +35,8 @@ With the executable, you can copy it to PATH environment and use it directly fro
 
 The script itself uses Python only. Downloading content from YouTube is handled
 by [pytube](https://pypi.org/project/pytube/). When downloading video with resolution higer than
-720p, audio and video files have to be downloaded separately and subsequently merged together using [moviepy](https://pypi.org/project/moviepy). Unfortunately this approach is quite slow, considered using CPU only. I am already finding a way to take advantage of GPU acceleration that should speed up the process.
+720p, audio and video files have to be downloaded separately and subsequently merged together using [FFmpeg](https://ffmpeg.org/). This means that in order to use this feature, FFmpeg needs to be installed and available from PATH variable.
+
 ## Authors
 
   - **Jáchym Holeček** - *Author* -
